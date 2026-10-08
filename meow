@@ -1,0 +1,34 @@
+#!/bin/bash
+# savepaste - save clipboard to file, auto-detecting type
+# usage: savepaste [filename]   (extension is added automatically)
+#        savepaste              (uses timestamped name)
+
+TARGETS=$(xclip -selection clipboard -t TARGETS -o 2>/dev/null)
+
+if echo "$TARGETS" | grep -q "image/png"; then
+    EXT="png"; TYPE="image/png"
+elif echo "$TARGETS" | grep -qE "image/jpeg|image/jpg"; then
+    EXT="jpg"
+    echo "$TARGETS" | grep -q "image/jpeg" && TYPE="image/jpeg" || TYPE="image/jpg"
+elif echo "$TARGETS" | grep -q "image/gif"; then
+    EXT="gif"; TYPE="image/gif"
+elif echo "$TARGETS" | grep -q "image/webp"; then
+    EXT="webp"; TYPE="image/webp"
+elif echo "$TARGETS" | grep -q "text/html"; then
+    EXT="html"; TYPE="text/html"
+elif echo "$TARGETS" | grep -q "text/plain"; then
+    EXT="txt"; TYPE="text/plain"
+else
+    echo "Unknown clipboard content. Available types: $TARGETS"
+    exit 1
+fi
+
+if [ -n "$1" ]; then
+    # if arg already has an extension, use as-is; otherwise append detected one
+    [[ "$1" == *.* ]] && OUTFILE="$1" || OUTFILE="$1.$EXT"
+else
+    OUTFILE="paste_$(date +%Y%m%d_%H%M%S).$EXT"
+fi
+
+xclip -selection clipboard -t "$TYPE" -o > "$OUTFILE"
+echo "Saved $OUTFILE"
