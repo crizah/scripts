@@ -1,0 +1,23 @@
+#!/bin/bash
+# cliplatest - copy path of latest modified file to clipboard
+# usage: cliplatest <dir>            → copies latest file in that dir
+#        cliplatest <full/file/path> → touches the file, then copies latest in its dir
+#        cliplatest                  → uses current directory
+
+INPUT="${1:-.}"
+
+if [ -d "$INPUT" ]; then
+    LATEST=$(ls -t "$INPUT" | head -n1)
+    if [ -z "$LATEST" ]; then
+        echo "No files in $INPUT"
+        exit 1
+    fi
+    FULLPATH="$(realpath "$INPUT")/$LATEST"
+elif [ -e "$INPUT" ]; then
+    FULLPATH="$(realpath "$INPUT")"
+else
+    echo "Not found: $INPUT"
+    exit 1
+fi
+printf '%s' "$FULLPATH" | xclip -selection clipboard
+echo "Copied: $FULLPATH"
